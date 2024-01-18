@@ -15,23 +15,31 @@ GREEN = \033[0;32m
 RED = \033[0;31m
 NC = \033[0m
 
+check_docker:
+	@if ! docker info > /dev/null 2>&1; then \
+        echo "Docker is not running. Please start Docker."; \
+        exit 1; \
+	fi
 
-nginx:
+nginx: check_docker
 	@docker build srcs/requirements/nginx/ -t nginx
 
-maria:
+maria: check_docker
+	@if docker container ls -a | grep mariadb; then \
+        docker container rm -f mariadb; \
+    fi
 	@docker build srcs/requirements/mariadb/ -t mariadb
 
-wordpress:
+wordpress: check_docker
 	@docker build srcs/requirements/wordpress/ -t wordpress
 
-run:
+run: check_docker
 	@cd ./srcs && docker-compose up -d
 
-restart:
-	@docker-compose down && docker-compose up -d
+restart: check_docker
+	@cd ./srcs && docker-compose down && docker-compose up -d
 
-stop:
+stop: check_docker
 	printf "${RED}Stopping all containers${NC}\n"
 	@docker stop $$(docker ps -a -q); \
 

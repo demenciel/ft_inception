@@ -16,23 +16,19 @@ echo "${GREEN}Starting MariaDB service${NC}"
 mysqld_safe &
 pid="$!"
 
-# Wait for MariaDB to start
+# Wait for MariaDB to start and be ready to accept connections
 echo "${GREEN}Waiting for MariaDB to start up${NC}"
-counter=1
-while [ $counter -le 30 ]; do
-    if mysqladmin ping -h localhost -u root --password="${MYSQL_ROOT_PASSWORD}" &> /dev/null; then
-        echo "${GREEN}MariaDB is up${NC}"
-        break
+counter=0
+while ! mysqladmin ping -h localhost -u root -p"$MYSQL_ROOT_PASSWORD" &> /dev/null; do
+    counter=$((counter+1))
+    if [ "$counter" -ge 60 ]; then
+        echo "${RED}Failed to start MariaDB within 60 seconds${NC}"
+        exit 1
     fi
     echo "Waiting for MariaDB to start..."
     sleep 1
-    ((counter++))
 done
-
-if [ $counter -gt 30 ]; then
-    echo "${RED}MariaDB did not start in time${NC}"
-    exit 1
-fi
+echo "${GREEN}MariaDB is up and running${NC}"
 
 # Initial database setup
 echo "${GREEN}Initial db setup${NC}"
@@ -42,21 +38,15 @@ echo "CREATE USER IF NOT EXISTS \`${MYSQL_USER}\`@'%' IDENTIFIED BY '${MYSQL_PAS
 mysql -u root -e "CREATE USER IF NOT EXISTS \`${MYSQL_USER}\`@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';"
 echo "GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO \`${MYSQL_USER}\`@'%';"
 mysql -u root -e "GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO \`${MYSQL_USER}\`@'%';"
-echo "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';"
-mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';"
 echo "FLUSH PRIVILEGES;"
 mysql -u root -e "FLUSH PRIVILEGES;"
 echo "${GREEN}Initial db setup done${NC}"
+
 
 # Shutdown MariaDB service
 echo "${GREEN}Shutting down Mariadb services${NC}"
 mysqladmin -u root -p "${MYSQL_ROOT_PASSWORD}" shutdown
 
-# Wait for the operations to complete
-echo "${GREEN}Wait for the operations to complete${NC}"
-wait "$pid"
-
 # Run MariaDB in the foreground to keep the container running
 echo "${GREEN}Running MariaDB in the foreground${NC}"
-exec mysqld_safe
 
