@@ -6,7 +6,7 @@
 #    By: acouture <acouture@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/15 15:32:49 by acouture          #+#    #+#              #
-#    Updated: 2024/01/15 18:30:36 by acouture         ###   ########.fr        #
+#    Updated: 2024/01/18 16:50:53 by acouture         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,23 +25,28 @@ maria:
 wordpress:
 	@docker build srcs/requirements/wordpress/ -t wordpress
 
-run: nginx maria
-	@printf "${GREEN}Starting nginx${NC}"
-	@if [ "$$(docker ps -a -q)" ]; then docker rm -f $$(docker ps -a -q); fi
-	@nginx_id=$$(docker run -d nginx); \
-	printf "Nginx Container ID: $$nginx_id"; \
-	printf "${GREEN}Starting mariadb${NC}"
-	@mariadb_id=$$(docker run -d -e MARIADB_ROOT_PASSWORD="rootroot" -e SQL_USER="mysql" -e SQL_PASSWORD="password" -e SQL_DATABASE=inception mariadb); \
-	printf "Mariadb Container ID: $$mariadb_id"; \
-	printf MariaDB is started; \
-	sleep 10; \
+run:
+	@cd ./srcs && docker-compose up -d
+
+restart:
+	@docker-compose down && docker-compose up -d
 
 stop:
-	@printf "${RED}Stopping nginx${NC}"
+	printf "${RED}Stopping all containers${NC}\n"
 	@docker stop $$(docker ps -a -q); \
-	printf "${RED}Removing nginx${NC}"
+
+rm-containers: stop
+	printf "${RED}Removing containers${NC}\n"
 	@docker rm $$(docker ps -a -q); \
-	printf "${RED}Removing nginx image${NC}"
+
+rm-images: stop
+	printf "${RED}Removing images${NC}\n"
 	@docker rmi $$(docker images -q); \
+
+rm-volumes: stop
+	printf "${RED}Removing volumes${NC}\n"
+	@docker volume rm $$(docker volume ls -q); \
+
+rm-all: rm-containers rm-images rm-volumes
 
 

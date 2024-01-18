@@ -1,2 +1,75 @@
+# Docker-compose
+version: '3.8'
 
-version: 1.0
+services:
+  mariadb:
+    init: true
+    container_name: mariadb
+    build: 
+      context: requirements/mariadb
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mariadb:/var/lib/mysql
+    networks:
+      - inception
+    expose:
+      - "3306"
+
+  wordpress:
+    init: true
+    depends_on:
+      - mariadb
+    container_name: wordpress
+    build: 
+      context: requirements/wordpress
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WP_SITE_TITLE: ${WP_SITE_TITLE}
+      WP_ADMIN_USER: ${WP_ADMIN_USER}
+      WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      WP_ADDITIONAL_USER: ${WP_ADDITIONAL_USER}
+      WP_ADDITIONAL_USER_EMAIL: ${WP_ADDITIONAL_USER_EMAIL}
+      WP_ADDITIONAL_USER_PASSWORD: ${WP_ADDITIONAL_USER_PASSWORD}
+    volumes:
+      - wordpress:/var/www/wordpress
+    networks:
+      - inception
+    expose: 
+      - "9000"
+
+  nginx:
+    init: true
+    depends_on:
+      - wordpress
+    build:
+      context: requirements/nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - inception
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - wordpress:/var/www/html:ro
+
+volumes:
+  wordpress:
+  mariadb:
+
+networks:
+  inception:

@@ -23,6 +23,7 @@ RUN if ! id -u www-data > /dev/null 2>&1; then adduser -u 82 -D -S -G www-data w
 RUN if ! getent group www-data > /dev/null 2>&1; then addgroup -g 82 -S www-data; fi
 
 RUN chown -R www-data:www-data /var/www/html
+COPY conf/fastcgi-php.conf /etc/nginx/snippets/fastcgi-php.conf
 
 # Run a script to start Nginx and test if the configuration is correct
 COPY tools/start-nginx.sh /start-nginx.sh
