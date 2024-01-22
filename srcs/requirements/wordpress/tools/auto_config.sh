@@ -1,7 +1,15 @@
 #!/bin/sh
 # WordPress script
 # Wait for the database to be ready
-sleep 10
+wait_for_db() {
+    echo "Waiting for database connection..."
+    while ! mysqladmin ping -h"mariadb" --silent; do
+        sleep 10
+    done
+}
+
+# Wait for the database to be ready
+wait_for_db
 
 # Check if wp-config.php exists
 if [ ! -f /var/www/html/wp-config.php ]; then
