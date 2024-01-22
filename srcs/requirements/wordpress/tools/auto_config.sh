@@ -2,10 +2,11 @@
 # WordPress script
 # Wait for the database to be ready
 wait_for_db() {
-    echo "Waiting for database connection..."
     while ! mysqladmin ping -h"mariadb" --silent; do
+        echo "Waiting for database connection..."
         sleep 10
     done
+    echo "Database is ready!"
 }
 
 # Wait for the database to be ready

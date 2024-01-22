@@ -1,24 +1,22 @@
-# Description: MariaDB container
+# Use Alpine Linux as the base image
 FROM alpine:3.18
 
-RUN apk update && apk upgrade
-# Installing the package will install mariadb-client and mariadb-server
-RUN apk add mariadb mariadb-client
+# Install MariaDB server and client
+RUN apk update && apk add mariadb mariadb-client
+
+# Create a directory for MariaDB data
+RUN mkdir -p /var/lib/mysql
 
 # Copy the MariaDB configuration file
-COPY conf/my.conf /etc/my.conf
+COPY conf/50-server.conf /etc/50-server.conf
 # Ensure the configuration file is readable
-RUN chmod 644 /etc/my.conf
+RUN chmod 644 /etc/50-server.conf
 
 # Initialize the database
 RUN mysql_install_db --user=mysql --ldata=/var/lib/mysql
 
-# After initializing the database in init_db.sh
-RUN chown -R mysql:mysql /var/lib/mysql
-RUN chmod -R 755 /var/lib/mysql
+# Expose the default MySQL port
+EXPOSE 3306
 
-# Copy the script that will start the server
-COPY tools/init_db.sh /init_db.sh
-RUN chmod +x /init_db.sh
-
-CMD ["/init_db.sh"]
+# Start MariaDB server on container startup
+CMD ["mysqld", "--user=mysql"]
