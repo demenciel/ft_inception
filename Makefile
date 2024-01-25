@@ -47,11 +47,11 @@ rm-containers: stop
 	printf "${RED}Removing containers${NC}\n"
 	@docker rm $$(docker ps -a -q); \
 
-rm-images: stop
+rm-images: 
 	printf "${RED}Removing images${NC}\n"
 	@docker rmi $$(docker images -q); \
 
-rm-volumes: stop
+rm-volumes: 
 	printf "${RED}Removing volumes${NC}\n"
 	@docker volume rm $$(docker volume ls -q); \
 

@@ -1,43 +1,36 @@
-#wordpress
-FROM alpine:3.13
+FROM alpine:3.17
 
-# Update and install necessary packages
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
-        wget \
-        tar \
-        mariadb-client \
-        php7 \
-        php7-fpm \
-        php7-phar \
-        php7-json \
-        php7-mysqli 
+# Install php
+RUN apk --no-cache update && \
+    apk --no-cache add php81 php81-fpm php81-mysqli php81-pdo php81-pdo_mysql php81-phar php-mbstring mariadb-client && \
+	apk --no-cache add wget
 
-# Download WordPress
-RUN wget https://fr.wordpress.org/wordpress-6.0-fr_FR.tar.gz -P /tmp/
+# Copy php-fpm config
+ADD ./conf/www.conf /etc/php81/php-fpm.d/www.conf
 
-# Create the directory and extract WordPress
-RUN mkdir -p /var/www/html && \
-    tar -xzf /tmp/wordpress-6.0-fr_FR.tar.gz -C /tmp/ && \
-    mv /tmp/wordpress/* /var/www/html/ && \
-    rm -rf /tmp/wordpress-6.0-fr_FR.tar.gz /tmp/wordpress
+# Install wp-cli
+RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+RUN chmod +x wp-cli.phar
+RUN mv wp-cli.phar /usr/local/bin/wp
 
-# Set permissions
-RUN chown -R root:root /var/www/html && \
-    chmod -R 755 /var/www/html
+# RUN mkdir -p /var/www/html
 
-# Modify the php-fpm configuration file to listen on port 9000 for Wordpress
-COPY conf/www.conf /etc/php7/php-fpm.d/www.conf
-RUN chown -R root:root /etc/php7/php-fpm.d/www.conf
+# ADD tools/index.php /var/www/html/index.php
 
-# Install WP-CLI
-RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
-    chmod +x wp-cli.phar && \
-    mv wp-cli.phar /usr/local/bin/wp
+# COPY tools/script.sh /script.sh
+COPY tools/script.sh /script.sh
+RUN chmod +x /script.sh
 
-COPY tools/auto_config.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/auto_config.sh
+WORKDIR /var/www
 
-VOLUME /var/www/html
+RUN wget https://fr.wordpress.org/wordpress-6.0-fr_FR.tar.gz -P .
+RUN tar -xzf wordpress-6.0-fr_FR.tar.gz && rm wordpress-6.0-fr_FR.tar.gz
 
-ENTRYPOINT ["/usr/local/bin/auto_config.sh"]
+WORKDIR /var/www/wordpress
+# ADD conf/wp-config.php /var/www/wordpress/wp-config.php
+
+EXPOSE 9000
+
+ENTRYPOINT ["/script.sh"]
+
+# CMD ["php-fpm81", "--nodaemonize"]

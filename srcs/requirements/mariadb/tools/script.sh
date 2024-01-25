@@ -1,41 +1,42 @@
-#!/bin/sh
+#!/bin/bash
 
-# Colors
-GREEN='\033[0;32m'
-NC='\033[0m'
+log_success() {
+  echo -e "\033[32m$1\033[0m"  # Vert
+}
 
-# Start the MariaDB service
+log_wait() {
+  echo -e "\033[33m$1\033[0m"  # Jaune
+}
+
+log_info() {
+  echo -e "\033[34m$1\033[0m"  # Bleu
+}
+
+log_info "Starting mariadb service..."
 service mysql start
 
-# Wait for MariaDB to start and be ready to accept connections
-echo "${GREEN}Waiting for MariaDB to start up${NC}"
-counter=0
-while ! mysqladmin ping -h localhost --silent; do
-    counter=$((counter+1))
-    if [ "$counter" -ge 60 ]; then
-        echo "Failed to start MariaDB within 60 seconds"
-        exit 1
+sleep 1
+log_info "Waiting for Mariadb..."
+while true; do
+    if mysqladmin ping -h localhost -u root -p  --silent; then
+        break
     fi
-    echo "Waiting for MariaDB to start..."
+    log_info "waiting..."
     sleep 1
 done
+log_success "Mariadb is up and running."
 
-# Initial database setup
-echo "${GREEN}Initial db setup${NC}"
-echo "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;" > db1.sql
-echo "CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';" >> db1.sql
-echo "GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}\`.* TO '${MYSQL_USER}'@'%';" >> db1.sql
-echo "ALTER USER '${MYSQL_USER}'@'localhost' IDENTIFIED BY '${MYSQL_ROOTPASSWORD}';" >> db1.sql
-echo "FLUSH PRIVILEGES;" >> db1.sql
 
-# Execute the SQL statements
-mysql < db1.sql
+sleep 1
+mysql -u root -p  -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
+sleep 1
+mysql -u root -p  -e "CREATE USER IF NOT EXISTS \`${DB_USER}\`@'wordpress.srcs_inception' IDENTIFIED BY '${DB_PASSWORD}';"
+mysql -u root -p  -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO \`${DB_USER}\`@'wordpress.srcs_inception';"
+sleep 1
+mysql -u root -p  -e "FLUSH PRIVILEGES"
 
-# Give some time before killing the MySQL process
-sleep 5
+sleep 1
+log_info "Stopping mariadb services..."
+mysqladmin -u root -p  shutdown
 
-# Kill the MySQL process
-kill $(cat /var/run/mysqld/mysqld.pid)
-
-# Start MariaDB
-mysqld
+exec mysqld_safe

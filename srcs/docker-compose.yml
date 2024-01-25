@@ -1,75 +1,64 @@
-# Docker-compose
-version: '3.8'
+version: '3'
 
 services:
-  mariadb:
-    init: true
-    container_name: mariadb
-    build: 
-      context: requirements/mariadb
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootroot
-      MYSQL_DATABASE: maria_db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: rootroot
-    volumes:
-      - mariadb:/var/lib/mysql
-    networks:
-      - inception
-    expose:
-      - "3306"
-
-  wordpress:
-    init: true
-    depends_on:
-      - mariadb
-    container_name: wordpress
-    build: 
-      context: requirements/wordpress
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      WORDPRESS_DB_HOST: mariadb
-      WORDPRESS_DB_USER: root
-      WORDPRESS_DB_PASSWORD: rootroot
-      WORDPRESS_DB_NAME: maria_db
-      WP_SITE_TITLE: ${WP_SITE_TITLE}
-      WP_ADMIN_USER: ${WP_ADMIN_USER}
-      WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD}
-      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
-      WP_ADDITIONAL_USER: ${WP_ADDITIONAL_USER}
-      WP_ADDITIONAL_USER_EMAIL: ${WP_ADDITIONAL_USER_EMAIL}
-      WP_ADDITIONAL_USER_PASSWORD: ${WP_ADDITIONAL_USER_PASSWORD}
-    volumes:
-      - wordpress:/var/www/wordpress
-    networks:
-      - inception
-    expose: 
-      - "9000"
-
   nginx:
     init: true
-    depends_on:
-      - wordpress
     build:
       context: requirements/nginx
-      dockerfile: Dockerfile
     container_name: nginx
-    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - 443:443
+    depends_on:
+      - wordpress
+    networks:
+      - inception
+    env_file:
+      - .env
+    restart: always
+
+  wordpress:
+    init: true
+    build:
+      context: requirements/wordpress
+    container_name: wordpress
+    networks:
+      - inception
+    depends_on:
+      - mariadb
+    env_file:
+      - .env
+    volumes:
+      - wordpress_data:/var/www/wordpress
+    restart: always
+
+  mariadb:
+    init: true
+    build:
+      context: requirements/mariadb
+    container_name: mariadb
+    env_file:
+      - .env
     networks:
       - inception
     volumes:
-      - ./nginx:/etc/nginx/conf.d
-      - wordpress:/var/www/html:ro
+      - mariadb_data:/var/lib/mysql
+    restart: always
 
 volumes:
-  wordpress:
-  mariadb:
+  wordpress_data:
+    driver: local
+    driver_opts:
+      o: 'bind'
+      type: 'none'
+      device: '/Users/acouture/Desktop/wordpress_data'
+  mariadb_data:
+    driver: local
+    driver_opts:
+      o: 'bind'
+      type: 'none'
+      device: '/Users/acouture/Desktop/mariadb_data'
+
 
 networks:
   inception:
+    driver: bridge
