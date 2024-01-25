@@ -36,19 +36,19 @@ log_success "Base de données WordPress créée avec succès."
 # Créer la configuration WordPress
 sleep 1
 log_success "Création de la configuration WordPress..."
-wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASSWORD" --dbhost="$DB_HOST" --locale="ca_FR" --path="/var/www/wordpress"
+wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASSWORD" --dbhost="$DB_HOST" --locale="ca_FR" --path="/var/www/wordpress/wordpress"
 log_success "Configuration WordPress créée avec succès."
 
 # Installer WordPress
 sleep 1
 log_success "Installation de WordPress..."
-wp core install --url="$WP_DOMAIN" --title="$DB_NAME" --admin_user="$WP_ADMIN" --admin_password="$WP_ADMIN_PASSWORD" --admin_email="$WP_EMAIL" --skip-email --path="/var/www/wordpress"
+wp core install --url="$WP_DOMAIN" --title="$DB_NAME" --admin_user="$WP_ADMIN" --admin_password="$WP_ADMIN_PASSWORD" --admin_email="$WP_EMAIL" --skip-email --path="/var/www/wordpress/wordpress"
 log_success "WordPress installé avec succès."
 
 # Créer un utilisateur WordPress
 sleep 1
 log_success "Création de l'utilisateur WordPress..."
-wp user create "$WP_USER" "$WP_USER_EMAIL" --role=author --user_pass="$WP_USER_PASSWORD" --path="/var/www/wordpress"
+wp user create "$WP_USER" "$WP_USER_EMAIL" --role=author --user_pass="$WP_USER_PASSWORD" --path="/var/www/wordpress/wordpress"
 log_success "Utilisateur WordPress créé avec succès."
 
 # Démarrer PHP-FPM
