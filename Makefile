@@ -33,15 +33,29 @@ maria: check_docker
 wordpress: check_docker
 	@docker build srcs/requirements/wordpress/ -t wordpress
 
-run: check_docker
+up: check_docker
 	@cd ./srcs && docker-compose up -d
+
+down: check_docker
+	@cd ./srcs && docker-compose down
+
+reup: down up
 
 restart: check_docker
 	@cd ./srcs && docker-compose down && docker-compose up -d
 
+shell-%:
+	@docker exec -it $* sh
+
 stop: check_docker
 	printf "${RED}Stopping all containers${NC}\n"
 	@docker stop $$(docker ps -a -q); \
+
+logs: ## Shows logs lively in the container
+	@cd srcs && docker-compose logs --follow --tail 100
+
+logs-%: check_docker_status ## Shows logs lively for the selected container
+	@cd srcs && while true; do docker-compose logs --tail 100 --follow $*; sleep 1; done
 
 rm-containers: stop
 	printf "${RED}Removing containers${NC}\n"
