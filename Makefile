@@ -34,7 +34,7 @@ wordpress: check_docker
 	@docker build srcs/requirements/wordpress/ -t wordpress
 
 up: check_docker
-	@cd ./srcs && docker-compose up -d
+	@cd ./srcs && docker-compose up -d 
 
 down: check_docker
 	@cd ./srcs && docker-compose down
@@ -56,6 +56,9 @@ logs: ## Shows logs lively in the container
 
 logs-%: check_docker_status ## Shows logs lively for the selected container
 	@cd srcs && while true; do docker-compose logs --tail 100 --follow $*; sleep 1; done
+
+nginx-error-logs:
+	@cd srcs && docker-compose exec nginx tail -f /var/log/nginx/error.log
 
 rm-containers: stop
 	printf "${RED}Removing containers${NC}\n"
