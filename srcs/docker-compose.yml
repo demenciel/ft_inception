@@ -13,6 +13,8 @@ services:
       - inception
     env_file:
       - .env
+    volumes:
+      - wordpress_data:/var/www
     restart: always
 
   wordpress:
@@ -30,7 +32,7 @@ services:
     env_file:
       - .env
     volumes:
-      - wordpress_data:/var/www/wordpress
+      - wordpress_data:/var/www
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -57,7 +59,7 @@ volumes:
     driver_opts:
       o: 'bind'
       type: 'none'
-      device: '/home/acouture/data'
+      device: '/home/acouture/wordpress_data'
   mariadb_data:
     driver: local
     driver_opts:

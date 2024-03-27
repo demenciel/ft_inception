@@ -1,5 +1,7 @@
 #!/bin/sh
-
+log_info "Attente de 30sec..."
+sleep 10
+log_info "Attente de 30sec finis"
 # Fonction pour afficher un message en vert
 log_success() {
   echo -e "\033[32m[ENTRY SCRIPT] $1\033[0m"  # Vert
@@ -34,7 +36,7 @@ done
 log_success "Base de données WordPress créée avec succès."
 
 # Créer la configuration WordPress
-sleep 2
+# sleep 2
 log_success "Création de la configuration WordPress..."
 wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASSWORD" --dbhost="$DB_HOST" --locale="ca_FR" --path="/var/www/"
 log_success "Configuration WordPress créée avec succès."
