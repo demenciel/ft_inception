@@ -14,7 +14,7 @@ services:
     env_file:
       - .env
     volumes:
-      - wordpress_data:/var/www
+      - wordpress_data:/var/www/html
     restart: always
 
   wordpress:
@@ -28,11 +28,10 @@ services:
       - inception
     depends_on:
       - mariadb
-      - nginx
     env_file:
       - .env
     volumes:
-      - wordpress_data:/var/www
+      - wordpress_data:/var/www/html
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}

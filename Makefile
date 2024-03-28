@@ -60,6 +60,11 @@ logs-%: check_docker_status ## Shows logs lively for the selected container
 nginx-error-logs:
 	@cd srcs && docker-compose exec nginx tail -f /var/log/nginx/error.log
 
+rm-wordpress:
+	printf "${RED}Removing wordpress container${NC}\n"
+	@docker rm $$(docker ps -a -q --filter "name=wordpress");
+	@docker rmi $$(docker images -q --filter "reference=wordpress");
+
 rm-containers: stop
 	printf "${RED}Removing containers${NC}\n"
 	@docker rm $$(docker ps -a -q); \

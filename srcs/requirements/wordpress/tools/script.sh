@@ -35,22 +35,41 @@ while ! mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASSWORD" -e "USE $DB_NAME" 2>/de
 done
 log_success "Base de données WordPress créée avec succès."
 
+
+sed -i "s/listen = \/run\/php\/php7.3-fpm.sock/listen = 9000/" "/etc/php/7.3/fpm/pool.d/www.conf";
+chown -R www-data:www-data /var/www/*;
+chown -R 755 /var/www/*;
+mkdir -p /run/php/;
+touch /run/php/php7.3-fpm.pid;
+
+if [ ! -f /var/www/html/wp-config.php ]; then
+	echo "Wordpress: setting up..."
+	mkdir -p /var/www/html
+	wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar;
+	chmod +x wp-cli.phar; 
+	mv wp-cli.phar /usr/local/bin/wp;
+	cd /var/www/html;
+	wp core download --allow-root;
+fi
+
+exec "$@"
+
 # Créer la configuration WordPress
 # sleep 2
 log_success "Création de la configuration WordPress..."
-wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASSWORD" --dbhost="$DB_HOST" --locale="ca_FR" --path="/var/www/"
+wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASSWORD" --dbhost="$DB_HOST" --locale="ca_FR" --path="/var/www/html"
 log_success "Configuration WordPress créée avec succès."
 
 # Installer WordPress
 sleep 2
 log_success "Installation de WordPress..."
-wp core install --url="$WP_DOMAIN" --title="$DB_NAME" --admin_user="$WP_ADMIN" --admin_password="$WP_ADMIN_PASSWORD" --admin_email="$WP_EMAIL" --skip-email --path="/var/www/"
+wp core install --url="$WP_DOMAIN" --title="$DB_NAME" --admin_user="$WP_ADMIN" --admin_password="$WP_ADMIN_PASSWORD" --admin_email="$WP_EMAIL" --skip-email --path="/var/www/html"
 log_success "WordPress installé avec succès."
 
 # Créer un utilisateur WordPress
 sleep 2
 log_success "Création de l'utilisateur WordPress..."
-wp user create "$WP_USER" "$WP_USER_EMAIL" --role=author --user_pass="$WP_USER_PASSWORD" --path="/var/www/"
+wp user create "$WP_USER" "$WP_USER_EMAIL" --role=author --user_pass="$WP_USER_PASSWORD" --path="/var/www/html"
 log_success "Utilisateur WordPress créé avec succès."
 
 # Démarrer PHP-FPM
